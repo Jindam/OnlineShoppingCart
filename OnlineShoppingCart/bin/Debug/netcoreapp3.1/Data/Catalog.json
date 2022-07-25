@@ -1,0 +1,11 @@
+{
+  "catalogId": 1,
+  "products": [
+    {
+      "id": 1,
+      "name": "chair",
+      "price": 295,
+      "quantity": 1
+    }
+  ]
+}

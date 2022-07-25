@@ -1,0 +1,18 @@
+{
+  "cartId": 1,
+  "products": [
+    {
+      "id": 1,
+      "name": "chair",
+      "price": 295,
+      "quantity": 1
+    },
+    {
+      "id": 2,
+      "name": "ipod",
+      "price": 500,
+      "quantity": 1
+    }
+  ],
+  "totalcost": 795
+}
