@@ -10,6 +10,7 @@ namespace OnlineShoppingCart.Helpers
 {
     public static class JsonFileReader
     {
+        // read json file
         public static List<T> ReadAsync<T>(string filePath)
         {
             using (StreamReader reader = new StreamReader(filePath))
@@ -18,12 +19,5 @@ namespace OnlineShoppingCart.Helpers
             }
         }
 
-        public static T ReadByItem<T>(string filePath)
-        {
-            using (StreamReader reader = new StreamReader(filePath))
-            {
-                return JsonConvert.DeserializeObject<T>(reader.ReadToEnd());
-            }
-        }
     }
 }

@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 using OnlineShoppingCart.Helpers;
 using OnlineShoppingCart.Models;
 using OnlineShoppingCart.Models.Product;
@@ -18,72 +19,65 @@ using OnlineShoppingCart.Models.Product;
 namespace OnlineShoppingCart
 {
 
-    
+
     public class CatalogController : Controller
     {
-        private readonly IProductListHandler _handler;
-        private readonly IMapper _mapper;
+        private const string catalogProductItemCacheKey = "catalogProductItemCache";
+        private IMemoryCache _cache;
 
-        public CatalogController(IProductListHandler handler, IMapper mapper)
+        public CatalogController(IMemoryCache cache)
         {
-            _handler = handler;
-            _mapper = mapper;
+            _cache = cache;
         }
 
-        // GET: api/Product
+        /// <summary>
+        /// Get Catalog by Size, it returns the catalog products count
+        /// 
+        /// </summary>
+        /// <returns></returns>
         [HttpGet]
         [Route("api/catalog/size")]
         public IActionResult Get()
         {
             try
             {
-                var query = new ProductListQuery();
+                var catalogProductItems = JsonFileReader.ReadAsync<ProductModel>(@".\Data\Products.json");
 
-                var catalogItems = JsonFileReader.ReadAsync<CatalogModel>(@".\Data\Catalog.json");
-
-                var results = catalogItems.FirstOrDefault().Products;
-
-                var response = new ServiceResponseVM()
+                if (_cache.TryGetValue(catalogProductItemCacheKey, out CatalogModel _catalogProducts) && _catalogProducts != null)
                 {
-                    Success = true,
-                };
+                    if (_catalogProducts.Products.Count > 0)
+                        return Ok(new { Success = true, count = _catalogProducts.Products.Count });
+                }
 
-                if (results.Count > 0)
-                    response.count = results.Count;
-                else
-                    response.Data = "No items in catalog";
-
-                return Ok(response);
+                return Ok(new { Success = true, count = 0 });
             }
             catch (FileNotFoundException ex)
             {
-                var response = new ServiceResponseVM()
-                {
-                    Success = false,
-                    Data = ex.Message
-                };
-
-                return StatusCode(501, response);
+                //log the error with ex.stacktrace
+                return StatusCode(501, new { Success = false });
             }
         }
 
+        /// <summary>
+        /// Get Catalog Product by Id, it returns the catalog product
+        /// 
+        /// </summary>
+        /// <returns></returns>
         [HttpGet]
-        [Route("api/catalog/{catalogId:int}")]
-        public IActionResult GetbyId(int catalogId)
+        [Route("api/catalog/{productId:int}")]
+        public IActionResult GetbyId(int productId)
         {
-            CatalogModel catalogItem = null;
-
-            List<ProductModel> result = null;
-
-            if (catalogItem.CatalogId == catalogId)
+            if (_cache.TryGetValue(catalogProductItemCacheKey, out CatalogModel _catalogProducts) && _catalogProducts != null)
             {
-                result = catalogItem.Products;
-            }
+                var product = _catalogProducts.Products.FirstOrDefault(x => x.ID == productId);
 
-            if (result != null)
-                return Ok(new ServiceResponseVM() { Success = true, Data = result, count = result.Count });
+                if (product != null)
+                    return Ok(new { products = new List<ProductModel> { product } ,Success = true });
+                else
+                    return StatusCode(404, new { Success = false });
+            }
             else
-                return StatusCode(404, new ServiceResponseVM() { Success = false });
+                return StatusCode(404, new { Success = false });
         }
     }
 }

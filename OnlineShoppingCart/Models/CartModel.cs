@@ -10,12 +10,7 @@ namespace OnlineShoppingCart.Models
     {
         public int CartId { get; set; }
         public List<ProductModel> Products { get; set; }
-        public int TotalCost {
-            get;
-
-            set
-            ;
-        }
+        public decimal TotalCost { get; set ; }
         public bool IsCartCheckout { get; set; }
     }
 }
